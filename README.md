@@ -1,6 +1,6 @@
 #  Reality SNI Hunter
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
 **Reality SNI Hunter** is a topology-aware scanner that helps locate Server Name Indication (SNI) domains suitable for use with V2Ray/Xray Reality. It focuses on finding domains served from IP ranges physically and numerically close to your VPS so that Reality handshake traffic blends with legitimate datacenter traffic.
 
@@ -50,6 +50,14 @@ source .venv/bin/activate      # Linux / macOS
 pip install -r requirements.txt
 ```
 
+### macOS Specific
+
+If Python is built without Tkinter support, install it via Homebrew:
+
+```bash
+brew install python-tk@3.10
+```
+
 ## Usage
 
 - Quick run (show help and options):
@@ -74,6 +82,21 @@ You can package the app with PyInstaller (example):
 ```bash
 pip install pyinstaller
 pyinstaller --onefile main.py
+```
+
+The compiled binary will be available in the `dist/` folder:
+- **Linux**: `dist/main` (ELF 64-bit executable)
+- **Windows**: `dist/main.exe` (build on Windows)
+- **macOS**: `dist/main` (build on macOS, requires `brew install python-tk@3.10` if Tkinter is missing)
+
+> **Note:** PyInstaller creates platform-specific binaries. To get `.exe` for Windows, run the build command on a Windows machine. For macOS binary, run on a Mac. The current `dist/main` is built for Linux x86_64.
+
+### macOS Specific
+
+If Python is built without Tkinter support, install it via Homebrew before building:
+
+```bash
+brew install python-tk@3.10
 ```
 
 ## Development

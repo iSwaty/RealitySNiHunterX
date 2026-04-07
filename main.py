@@ -643,6 +643,34 @@ class RealityScannerApp(ctk.CTk):
         if re.search(r'[a-f0-9]{10,}', d): return False
         if re.search(r'\d{1,3}[-.]\d{1,3}[-.]\d{1,3}', d): return False
         
+        # Список известных сайтов/сервисов для фильтрации (международные + российские)
+        known_sites = [
+            # Международные
+            "google.", "youtube.", "facebook.", "twitter.", "instagram.",
+            "amazon.", "netflix.", "apple.", "microsoft.", "cloudflare.",
+            "akamai.", "fastly.", "cdn.", "cloud.", "aws.", "azure.",
+            "wikipedia.", "wiki.", "ign.com", "github.", "gitlab.",
+            "stackoverflow.", "reddit.", "linkedin.", "tiktok.",
+            # Российские
+            "yandex.", "ya.ru", "mail.ru", "vk.com", "vk.", "ok.ru",
+            "odnoklassniki.", "rutube.", "kinopoisk.", "avito.",
+            "wildberries.", "ozon.", "sberbank.", "sber.", "tinkoff.",
+            "alfabank.", "vtb.", "gazprom.", "rzd.", "aeroflot.",
+            "lenta.", "ria.", "tass.", "rt.", "sport24.", "championat.",
+            "habr.", "vc.ru", "vc.", "cnews.", "ixbt.", "3dnews.",
+            "pikabu.", "dtf.", "stopgame.", "igromania.", "kanobu.",
+            "ivi.", "okko.", "more.tv", "more.", "premier.", "start.",
+            "mk.", "kp.ru", "kp.", "aif.", "rg.ru", "rg.", "iz.",
+            "vesti.", "smotrim.", "rbc.", "forbes.", "vedomosti.",
+            "commersant.", "kommersant.", "sekretfirm.", "secretmag.",
+            "thebell.", "meduza.", "holod.", "importantstories.",
+            "novayagazeta.", "sobesednik.", "msk1.", "74.ru", "59.ru",
+            "ngs.ru", "k1news.", "fontanka.", "zakonu.net", "pravo.",
+            "garant.", "consultant.", "1c.", "kaspersky.", "drweb.",
+            "positive.", "bi.", "2gis.", "dzen.", "telega.", "telegram."
+        ]
+        if any(b in d for b in known_sites): return False
+        
         bad = ["ptr.", "static", "dynamic", "pool", "res", "host", "node", "ip-", 
                "cloudflare", "akamaized", "fastly", "local", "test", "cdn", "user",
                "traefik", "default", "svc", "cluster", "k8s"]
