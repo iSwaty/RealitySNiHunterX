@@ -28,7 +28,7 @@ from cryptography.x509 import DNSName
 # --- СЛОВАРЬ ПЕРЕВОДОВ / TRANSLATIONS ---
 LANG = {
     "ru": {
-        "title": "Reality SNI Hunter v7.0",
+        "title": "Reality SNI Hunter v7.1",
         "vps_ip": "IP адрес VPS:",
         "paste": "Вставить",
         "start": "НАЧАТЬ ПОИСК",
@@ -62,7 +62,7 @@ LANG = {
         "col_act": "Действия"
     },
     "en": {
-        "title": "Reality SNI Hunter v7.0",
+        "title": "Reality SNI Hunter v7.1",
         "vps_ip": "VPS IP Address:",
         "paste": "Paste",
         "start": "START SCAN",
@@ -96,7 +96,7 @@ LANG = {
         "col_act": "Actions"
     },
     "cn": {
-        "title": "Reality SNI 扫描器 v7.0",
+        "title": "Reality SNI 扫描器 v7.1",
         "vps_ip": "VPS IP地址:",
         "paste": "粘贴",
         "start": "开始扫描",
@@ -637,25 +637,77 @@ class RealityScannerApp(ctk.CTk):
         return found
 
     def is_clean(self, d):
+        """
+        Проверка домена на чистоту (не является ли он известным сайтом/сервисом).
+        Возвращает True, если домен ПОДХОДИТ для использования.
+        Возвращает False, если домен нужно отфильтровать.
+        """
         d = d.lower()
-        if d.replace('.','').isdigit(): return False
-        if len(d) < 4 or '.' not in d: return False
-        if re.search(r'[a-f0-9]{10,}', d): return False
-        if re.search(r'\d{1,3}[-.]\d{1,3}[-.]\d{1,3}', d): return False
         
-        # Расширенный список известных сайтов/сервисов для фильтрации (международные + российские + пользовательские)
-        known_sites = [
-            # Международные
-            "google.", "youtube.", "facebook.", "twitter.", "instagram.",
+        # 1. Базовые проверки формата
+        if d.replace('.','').isdigit(): return False  # Только цифры и точки
+        if len(d) < 4 or '.' not in d: return False  # Слишком короткий или нет точки
+        if re.search(r'[a-f0-9]{10,}', d): return False  # Длинные hex-строки
+        if re.search(r'\d{1,3}[-_.]\d{1,3}[-_.]\d{1,3}', d): return False  # IP-подобные
+        
+        # 2. Фильтрация доменов .invalid и некорректных
+        if d.endswith('.invalid') or 'invalid' in d.split('.')[0]: return False
+        
+        # 3. Фильтрация по ключевому слову "vpn"
+        if 'vpn' in d: return False
+        
+        # 4. Конвертация кириллических доменов в Punycode для проверки
+        # (яндекс.рф -> xn--p1ai для корректного сравнения)
+        try:
+            if any(ord(c) > 127 for c in d):  # Есть не-ASCII символы
+                d_puny = d.encode('idna').decode('ascii')
+                d = d_puny  # Используем Punycode версию для дальнейших проверок
+        except (UnicodeError, UnicodeDecodeError):
+            return False  # Некорректный домен
+        
+        # 5. Расширенный черный список доменов (международные + российские + пользовательские)
+        blocked_domains = frozenset([
+            # === Международные гиганты ===
+            "google.", "youtube.", "facebook.", "twitter.", "x.com",
             "amazon.", "netflix.", "apple.", "microsoft.", "cloudflare.",
             "akamai.", "fastly.", "cdn.", "cloud.", "aws.", "azure.",
-            "wikipedia.", "wiki.", "ign.com", "github.", "gitlab.",
+            "wikipedia.", "wiki.", "github.", "gitlab.",
             "stackoverflow.", "reddit.", "linkedin.", "tiktok.",
-            # Российские
-            "yandex.", "ya.ru", "mail.ru", "vk.com", "vk.", "ok.ru",
-            "odnoklassniki.", "rutube.", "kinopoisk.", "avito.",
-            "wildberries.", "ozon.", "sberbank.", "sber.", "tinkoff.",
-            "alfabank.", "vtb.", "gazprom.", "rzd.", "aeroflot.",
+            
+            # === IGN Entertainment (все поддомены) ===
+            "ign.com", "ignimgs.com", "ign.dev", "ign-inc.com",
+            "ignboards.com", "oyster.ignimgs.com",
+            "demo.mollusk.apis.ign.com", "demo.kraken.ign.com",
+            "ca.ign.com",
+            
+            # === Yahoo ===
+            "yahoo.net", "yahoo.com", "yimg.com", "mbp.yimg.com",
+            "brb.yahoo.net",
+            
+            # === Epic Games ===
+            "epicgames.com",
+            
+            # === Игровые карты и статистика ===
+            "fallout4map.com", "rdr2map.com", "fo76map.com",
+            "gta-5-map.com", "division2map.com", "hl2b.com",
+            "gamestats.com", "gamermetrics.com", "gamespy.com",
+            "mapgenie.io", "howlongtobeat.com",
+            
+            # === Российские IT и соцсети ===
+            "yandex.", "ya.ru", "xn--y1aw.xn--p1ai",  # яндекс.рф в Punycode
+            "mail.ru", "vk.com", "vk.ru", "vk.cc", "vkvideo.ru",
+            "vkontakte.ru", "vkontakte.com", "m.vkvideo.ru",
+            "ok.ru", "odnoklassniki.", "rutube.", "kinopoisk.",
+            "avito.", "wildberries.", "ozon.",
+            
+            # === VK Portal ===
+            "vk-portal.ru", "stats.vk-portal.net",
+            
+            # === Банки и финансы РФ ===
+            "sberbank.", "sber.", "tinkoff.", "alfabank.", "vtb.",
+            "gazprom.", "rzd.", "aeroflot.",
+            
+            # === СМИ РФ ===
             "lenta.", "ria.", "tass.", "rt.", "sport24.", "championat.",
             "habr.", "vc.ru", "vc.", "cnews.", "ixbt.", "3dnews.",
             "pikabu.", "dtf.", "stopgame.", "igromania.", "kanobu.",
@@ -668,44 +720,49 @@ class RealityScannerApp(ctk.CTk):
             "ngs.ru", "k1news.", "fontanka.", "zakonu.net", "pravo.",
             "garant.", "consultant.", "1c.", "kaspersky.", "drweb.",
             "positive.", "bi.", "2gis.", "dzen.", "telega.", "telegram.",
-            # Пользовательский список (зарубежные и российские домены - мусор)
-            "ca.ign.com", "fallout4map.com", "gamestats.com", "brb.yahoo.net",
-            "demo.mollusk.apis.ign.com", "1up.com", "rdr2map.com",
-            "demo.kraken.ign.com", "epicgames.com", "amnesia.top",
-            "max.ru", "vk.cc", "api.vk.ru", "duckdns.org",
-            # Базовые домены для фильтрации всех вариаций по странам и поддоменов
-            "ign.com", "yahoo.net", "yahoo.com", "epicgames.com"
-        ]
+            
+            # === Пользовательский список (зарубежные и российские) ===
+            "amnesia.top", "max.ru", "api.vk.ru", "duckdns.org",
+            
+            # === Базовые домены для полной блокировки всех поддоменов ===
+            "1up.com",
+        ])
         
-        # Проверка на точное совпадение или вхождение известного домена
-        if any(b in d for b in known_sites): return False
+        # 6. Проверка на вхождение заблокированного домена
+        if any(b in d for b in blocked_domains):
+            return False
         
-        # Фильтрация субдоменов известных доменов (*.domain.com)
-        # Извлекаем основной домен (последние две части)
+        # 7. Дополнительная проверка базового домена (для *.domain.com)
         parts = d.split('.')
         if len(parts) >= 2:
-            # Проверяем последние 2-3 части домена против известных
-            base_domain = '.'.join(parts[-2:])  # например: ign.com
-            base_domain_3 = '.'.join(parts[-3:]) if len(parts) >= 3 else base_domain  # например: apis.ign.com
+            # Проверяем последние 2-4 части домена
+            for i in range(2, min(len(parts) + 1, 5)):
+                base = '.'.join(parts[-i:])
+                if base in blocked_domains:
+                    return False
             
-            # Список базовых доменов для полной блокировки всех поддоменов
-            blocked_base_domains = [
-                "ign.com", "yahoo.net", "yahoo.com", "epicgames.com",
-                "yandex.ru", "yandex.kz", "yandex.ua", "yandex.by",
-                "yandex.com", "yandex.fr", "yandex.de", "yandex.co.il",
-                "yandex.fi", "yandex.lt", "yandex.lv", "yandex.ee",
-                "yandex.az", "yandex.ge", "yandex.am", "yandex.md",
-                "yandex.tm", "yandex.uz", "yandex.tj", "yandex.kg",
-                "vk.com", "vk.ru", "mail.ru", "google.com", "google.ru"
-            ]
-            
-            if base_domain in blocked_base_domains or base_domain_3 in blocked_base_domains:
+            # Особая проверка для yandex.* (все страны)
+            if parts[0] == 'yandex' or (len(parts) >= 2 and parts[-2] == 'yandex'):
+                return False
+            # Особая проверка для vk.* и vkvideo.*
+            if 'vk' in parts[-2] or 'vkvideo' in d:
+                return False
+            # Особая проверка для yimg.* (все поддомены)
+            if d.endswith('.yimg.com') or d == 'yimg.com':
+                return False
+            # Особая проверка для ign.* (все поддомены)
+            if d.endswith('.ign.com') or d == 'ign.com':
                 return False
         
-        bad = ["ptr.", "static", "dynamic", "pool", "res", "host", "node", "ip-", 
-               "cloudflare", "akamaized", "fastly", "local", "test", "cdn", "user",
-               "traefik", "default", "svc", "cluster", "k8s"]
-        if any(b in d for b in bad): return False
+        # 8. Служебные и технические домены
+        bad_keywords = frozenset([
+            "ptr.", "static", "dynamic", "pool", "res", "host", "node", "ip-",
+            "cloudflare", "akamaized", "fastly", "local", "test", "cdn", "user",
+            "traefik", "default", "svc", "cluster", "k8s"
+        ])
+        if any(b in d for b in bad_keywords):
+            return False
+        
         return True
 
 if __name__ == "__main__":

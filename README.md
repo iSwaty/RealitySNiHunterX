@@ -1,15 +1,17 @@
-# Reality SNI Hunter v7.0
+# Reality SNI Hunter v7.1
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey) ![Version](https://img.shields.io/badge/Version-7.0-red)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey) ![Version](https://img.shields.io/badge/Version-7.1-red)
 
 **Reality SNI Hunter** is a topology-aware scanner that helps locate Server Name Indication (SNI) domains suitable for use with V2Ray/Xray Reality. It focuses on finding domains served from IP ranges physically and numerically close to your VPS so that Reality handshake traffic blends with legitimate datacenter traffic.
 
-## 🚀 What's New in v7.0
+## 🚀 What's New in v7.1
 
-- **Optimized Filtering Engine:** Pre-compiled regex patterns and hash sets for 3x faster domain filtering
-- **Enhanced Blacklist:** Comprehensive filtering of known junk domains (Yandex, VK, Google, IGN, Epic Games, etc.) including all country variations and subdomains
-- **Performance Improvements:** Global constants moved outside class for faster access during high-volume scanning
-- **Better Subdomain Detection:** Blocks all variations like `sub.yandex.ru`, `maps.yandex.com`, `store.epicgames.com` automatically
+- **Enhanced Domain Filtering:** Comprehensive blacklist including VK Portal, Yandex all countries (with Punycode support for Cyrillic domains like яндекс.рф), all *.yimg.com subdomains, IGN network
+- **VPN Keyword Filter:** Automatically blocks any domain containing "vpn" keyword
+- **Invalid Domain Filter:** Blocks .invalid TLD and malformed domains like "invalid2.invalid"
+- **Improved Subdomain Detection:** Advanced pattern matching for vkvideo.ru, vk-portal.ru, stats.vk-portal.net, m.vkvideo.ru
+- **Performance Optimization:** Using frozenset for O(1) lookup time in blacklist checks
+- **Better Cyrillic Support:** Automatic IDNA/Punycode conversion for кириллические домены
 
 ## Overview
 
@@ -187,14 +189,16 @@ If you have questions or need help, open an issue or contact the repository main
 
 ## 🇷🇺 Русский
 
-**Reality SNI Hunter v7.0** — это сканер, ориентированный на топологию сети, который помогает находить SNI (Server Name Indication) домены, подходящие для использования с V2Ray/Xray Reality. Инструмент ищет домены в IP-диапазонах, физически и численно близких к вашему VPS, чтобы трафик выглядел естественным для дата-центра.
+**Reality SNI Hunter v7.1** — это сканер, ориентированный на топологию сети, который помогает находить SNI (Server Name Indication) домены, подходящие для использования с V2Ray/Xray Reality. Инструмент ищет домены в IP-диапазонах, физически и численно близких к вашему VPS, чтобы трафик выглядел естественным для дата-центра.
 
-### 🚀 Новое в версии 7.0
+### 🚀 Новое в версии 7.1
 
-- **Оптимизированный движок фильтрации:** Pre-compiled regex шаблоны и хеш-множества для ускорения фильтрации в 3 раза
-- **Расширенный чёрный список:** Комплексная фильтрация известных мусорных доменов (Яндекс, ВК, Google, IGN, Epic Games и др.) включая все национальные вариации и поддомены
-- **Улучшение производительности:** Глобальные константы вынесены за пределы класса для быстрого доступа при сканировании больших объёмов
-- **Лучшее обнаружение поддоменов:** Автоматическая блокировка всех вариаций типа `sub.yandex.ru`, `maps.yandex.com`, `store.epicgames.com`
+- **Улучшенная фильтрация доменов:** Расширенный чёрный список включая VK Portal, Яндекс все страны (с поддержкой Punycode для кириллических доменов типа яндекс.рф), все поддомены *.yimg.com, сеть IGN
+- **Фильтр по ключевому слову VPN:** Автоматически блокирует любые домены содержащие "vpn"
+- **Фильтр некорректных доменов:** Блокирует .invalid TLD и malformed домены типа "invalid2.invalid"
+- **Улучшенное обнаружение поддоменов:** Продвинутое сопоставление шаблонов для vkvideo.ru, vk-portal.ru, stats.vk-portal.net, m.vkvideo.ru
+- **Оптимизация производительности:** Использование frozenset для O(1) времени поиска в чёрном списке
+- **Улучшенная поддержка кириллицы:** Автоматическая конвертация IDNA/Punycode для кириллических доменов
 
 ### Возможности
 
@@ -299,14 +303,16 @@ pyinstaller --onefile --name "Reality_SNI_Hunter_v7" main.py
 
 ## 🇨🇳 简体中文
 
-**Reality SNI Hunter v7.0** 是一款面向拓扑的扫描工具，用于查找适合 V2Ray/Xray Reality 使用的 SNI（服务器名称指示）域名。该工具优先扫描与您的 VPS 在物理或数字上接近的 IP 段，使 Reality 握手流量更像是来自同一数据中心的合法流量。
+**Reality SNI Hunter v7.1** 是一款面向拓扑的扫描工具，用于查找适合 V2Ray/Xray Reality 使用的 SNI（服务器名称指示）域名。该工具优先扫描与您的 VPS 在物理或数字上接近的 IP 段，使 Reality 握手流量更像是来自同一数据中心的合法流量。
 
-### 🚀 7.0 版本新功能
+### 🚀 7.1 版本新功能
 
-- **优化的过滤引擎：** 预编译正则表达式和哈希集合，过滤速度提升 3 倍
-- **增强的黑名单：** 全面过滤已知垃圾域名（Yandex、VK、Google、IGN、Epic Games 等），包括所有国家变体和子域名
-- **性能改进：** 全局常量移至类外，提高大量扫描时的访问速度
-- **更好的子域名检测：** 自动拦截所有变体，如 `sub.yandex.ru`、`maps.yandex.com`、`store.epicgames.com`
+- **增强域名过滤：** 全面黑名单包括 VK Portal、Yandex 所有国家（支持 Punycode 转换西里尔域名如 яндекс.рф）、所有 *.yimg.com 子域名、IGN 网络
+- **VPN 关键词过滤：** 自动拦截任何包含 "vpn" 关键词的域名
+- **无效域名过滤：** 拦截 .invalid TLD 和格式错误的域名如 "invalid2.invalid"
+- **改进的子域名检测：** 高级模式匹配 vkvideo.ru、vk-portal.ru、stats.vk-portal.net、m.vkvideo.ru
+- **性能优化：** 使用 frozenset 实现 O(1) 查找时间的黑名单检查
+- **更好的西里尔文支持：** 自动 IDNA/Punycode 转换 кириллические домены
 
 ### 功能特性
 
