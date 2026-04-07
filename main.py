@@ -28,7 +28,7 @@ from cryptography.x509 import DNSName
 # --- СЛОВАРЬ ПЕРЕВОДОВ / TRANSLATIONS ---
 LANG = {
     "ru": {
-        "title": "Reality SNI Hunter v5.3 (Clean Core)",
+        "title": "Reality SNI Hunter v7.0",
         "vps_ip": "IP адрес VPS:",
         "paste": "Вставить",
         "start": "НАЧАТЬ ПОИСК",
@@ -62,7 +62,7 @@ LANG = {
         "col_act": "Действия"
     },
     "en": {
-        "title": "Reality SNI Hunter v5.3 (Clean Core)",
+        "title": "Reality SNI Hunter v7.0",
         "vps_ip": "VPS IP Address:",
         "paste": "Paste",
         "start": "START SCAN",
@@ -96,7 +96,7 @@ LANG = {
         "col_act": "Actions"
     },
     "cn": {
-        "title": "Reality SNI 扫描器 v5.3 (最终修正版)",
+        "title": "Reality SNI 扫描器 v7.0",
         "vps_ip": "VPS IP地址:",
         "paste": "粘贴",
         "start": "开始扫描",
@@ -643,7 +643,7 @@ class RealityScannerApp(ctk.CTk):
         if re.search(r'[a-f0-9]{10,}', d): return False
         if re.search(r'\d{1,3}[-.]\d{1,3}[-.]\d{1,3}', d): return False
         
-        # Список известных сайтов/сервисов для фильтрации (международные + российские)
+        # Расширенный список известных сайтов/сервисов для фильтрации (международные + российские + пользовательские)
         known_sites = [
             # Международные
             "google.", "youtube.", "facebook.", "twitter.", "instagram.",
@@ -667,9 +667,40 @@ class RealityScannerApp(ctk.CTk):
             "novayagazeta.", "sobesednik.", "msk1.", "74.ru", "59.ru",
             "ngs.ru", "k1news.", "fontanka.", "zakonu.net", "pravo.",
             "garant.", "consultant.", "1c.", "kaspersky.", "drweb.",
-            "positive.", "bi.", "2gis.", "dzen.", "telega.", "telegram."
+            "positive.", "bi.", "2gis.", "dzen.", "telega.", "telegram.",
+            # Пользовательский список (зарубежные и российские домены - мусор)
+            "ca.ign.com", "fallout4map.com", "gamestats.com", "brb.yahoo.net",
+            "demo.mollusk.apis.ign.com", "1up.com", "rdr2map.com",
+            "demo.kraken.ign.com", "epicgames.com", "amnesia.top",
+            "max.ru", "vk.cc", "api.vk.ru", "duckdns.org",
+            # Базовые домены для фильтрации всех вариаций по странам и поддоменов
+            "ign.com", "yahoo.net", "yahoo.com", "epicgames.com"
         ]
+        
+        # Проверка на точное совпадение или вхождение известного домена
         if any(b in d for b in known_sites): return False
+        
+        # Фильтрация субдоменов известных доменов (*.domain.com)
+        # Извлекаем основной домен (последние две части)
+        parts = d.split('.')
+        if len(parts) >= 2:
+            # Проверяем последние 2-3 части домена против известных
+            base_domain = '.'.join(parts[-2:])  # например: ign.com
+            base_domain_3 = '.'.join(parts[-3:]) if len(parts) >= 3 else base_domain  # например: apis.ign.com
+            
+            # Список базовых доменов для полной блокировки всех поддоменов
+            blocked_base_domains = [
+                "ign.com", "yahoo.net", "yahoo.com", "epicgames.com",
+                "yandex.ru", "yandex.kz", "yandex.ua", "yandex.by",
+                "yandex.com", "yandex.fr", "yandex.de", "yandex.co.il",
+                "yandex.fi", "yandex.lt", "yandex.lv", "yandex.ee",
+                "yandex.az", "yandex.ge", "yandex.am", "yandex.md",
+                "yandex.tm", "yandex.uz", "yandex.tj", "yandex.kg",
+                "vk.com", "vk.ru", "mail.ru", "google.com", "google.ru"
+            ]
+            
+            if base_domain in blocked_base_domains or base_domain_3 in blocked_base_domains:
+                return False
         
         bad = ["ptr.", "static", "dynamic", "pool", "res", "host", "node", "ip-", 
                "cloudflare", "akamaized", "fastly", "local", "test", "cdn", "user",
