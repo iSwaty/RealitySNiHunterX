@@ -643,31 +643,76 @@ class RealityScannerApp(ctk.CTk):
         if re.search(r'[a-f0-9]{10,}', d): return False
         if re.search(r'\d{1,3}[-.]\d{1,3}[-.]\d{1,3}', d): return False
         
-        # Список известных сайтов/сервисов для фильтрации (международные + российские)
+        # Расширенный список известных сайтов/сервисов для фильтрации
         known_sites = [
-            # Международные
-            "google.", "youtube.", "facebook.", "twitter.", "instagram.",
-            "amazon.", "netflix.", "apple.", "microsoft.", "cloudflare.",
-            "akamai.", "fastly.", "cdn.", "cloud.", "aws.", "azure.",
-            "wikipedia.", "wiki.", "ign.com", "github.", "gitlab.",
-            "stackoverflow.", "reddit.", "linkedin.", "tiktok.",
-            # Российские
-            "yandex.", "ya.ru", "mail.ru", "vk.com", "vk.", "ok.ru",
-            "odnoklassniki.", "rutube.", "kinopoisk.", "avito.",
-            "wildberries.", "ozon.", "sberbank.", "sber.", "tinkoff.",
-            "alfabank.", "vtb.", "gazprom.", "rzd.", "aeroflot.",
-            "lenta.", "ria.", "tass.", "rt.", "sport24.", "championat.",
-            "habr.", "vc.ru", "vc.", "cnews.", "ixbt.", "3dnews.",
-            "pikabu.", "dtf.", "stopgame.", "igromania.", "kanobu.",
-            "ivi.", "okko.", "more.tv", "more.", "premier.", "start.",
-            "mk.", "kp.ru", "kp.", "aif.", "rg.ru", "rg.", "iz.",
-            "vesti.", "smotrim.", "rbc.", "forbes.", "vedomosti.",
-            "commersant.", "kommersant.", "sekretfirm.", "secretmag.",
-            "thebell.", "meduza.", "holod.", "importantstories.",
-            "novayagazeta.", "sobesednik.", "msk1.", "74.ru", "59.ru",
-            "ngs.ru", "k1news.", "fontanka.", "zakonu.net", "pravo.",
-            "garant.", "consultant.", "1c.", "kaspersky.", "drweb.",
-            "positive.", "bi.", "2gis.", "dzen.", "telega.", "telegram."
+            # === ГЛОБАЛЬНЫЕ ГИГАНТЫ ===
+            "google.", "youtube.", "gstatic.", "android.", "gmail.", "ggpht.",
+            "facebook.", "fbcdn.", "whatsapp.", "instagram.", "meta.", "fbsbx.",
+            "twitter.", "x.com", "twimg.", "t.co",
+            "apple.", "icloud.", "mzstatic.", "itunes.", "appstore.",
+            "microsoft.", "windows.", "office.", "live.", "outlook.", "azure.", "msn.",
+            "amazon.", "aws.", "cloudfront.", "alexa.", "audible.",
+            "netflix.", "nflxso.", "nflxvideo.", "nflxext.",
+            "cloudflare.", "akamai.", "fastly.", "edgekey.", "edgesuite.",
+            
+            # === ИНФОРМАЦИОННЫЕ И РАЗРАБОТЧИКИ ===
+            "wikipedia.", "wiki.", "wikimedia.", "wiktionary.",
+            "github.", "gitlab.", "bitbucket.", "stackoverflow.", "stackexchange.",
+            "reddit.", "redd.it", "linkedin.", "medium.", "substack.",
+            "discord.", "slack.", "zoom.", "teams.", "skype.",
+            "tiktok.", "snapchat.", "pinterest.", "tumblr.", "vimeo.",
+            "twitch.", "spotify.", "soundcloud.", "deezer.",
+            "ign.com", "gamespot.", "polygon.", "kotaku.", "pcgamer.",
+            "steam.", "epicgames.", "origin.", "uplay.", "gog.", "battle.net",
+            
+            # === РОССИЙСКИЕ САЙТЫ (ПОЛНЫЙ СПИСОК) ===
+            # Поиск и экосистемы
+            "yandex.", "ya.ru", "yandex.net", "yastatic.",
+            "mail.ru", "vk.com", "vk.", "vkuser.", "ok.ru", "odnoklassniki.",
+            "rambler.", "ru.", "my.com", "bk.ru", "list.ru", "inbox.ru",
+            
+            # Банки и Финансы
+            "sberbank.", "sber.", "tinkoff.", "alfabank.", "vtb.",
+            "gazprombank.", "rosbank.", "raiffeisen.", "openbank.",
+            "uralsib.", "rencredit.", "homecredit.", "sovcombank.",
+            "gosuslugi.", "nalog.ru", "pfr.gov.", "fss.gov.", "rf.",
+            
+            # Маркетплейсы и Торговля
+            "wildberries.", "ozon.", "avito.", "yandex.market",
+            "aliexpress.", "lamoda.", "citilink.", "dns-shop.",
+            "mvideo.", "eldorado.", "technopark.", "holodilnik.",
+            "detmir.", "kari.", "sportmaster.", "leroymerlin.",
+            
+            # СМИ и Новости
+            "lenta.", "ria.", "tass.", "rt.", "rbc.",
+            "kommersant.", "vedomosti.", "forbes.", "interfax.",
+            "mk.ru", "kp.ru", "aif.ru", "argumenti.",
+            "rg.ru", "iz.ru", "vesti.ru", "tvcentr.", "5-tv.",
+            "ntv.ru", "ren.tv", "ctc.ru", "domashniy.",
+            
+            # IT и Сообщества
+            "habr.", "vc.ru", "dtf.", "pikabu.", "spark-interfax.",
+            "cnews.", "3dnews.", "ixbt.", "overclockers.",
+            "cyberforum.", "prog.hu", "xakep.",
+            
+            # Развлечения и Кино
+            "kinopoisk.", "ivi.", "okko.", "more.tv", "start.ru",
+            "premier.one", "tvzavr.", "rutube.", "smotrim.",
+            "afisha.", "timeout.", "kinoafisha.",
+            
+            # Такси и Транспорт
+            "uber.", "yandex.taxi", "citymobil.", "gettaxi.",
+            "aeroexpress.", "rzd.", "pobeda.aero", "aeroflot.",
+            "s7.ru", "uralairlines.", "redwings.",
+            
+            # Безопасность и Антивирусы
+            "kaspersky.", "drweb.", "eset.", "avast.", "avg.",
+            "positive.", "bi.", "fsecure.",
+            
+            # Другое
+            "telegram.", "2gis.", "dzen.", "telega.",
+            "delivery-club.", "samokat.", "yandex.eda", "edadeal.",
+            "wb.ru", "ozon.ru", "sbermarket.", "selfie."
         ]
         if any(b in d for b in known_sites): return False
         
@@ -676,7 +721,6 @@ class RealityScannerApp(ctk.CTk):
                "traefik", "default", "svc", "cluster", "k8s"]
         if any(b in d for b in bad): return False
         return True
-
 if __name__ == "__main__":
     app = RealityScannerApp()
     app.mainloop()
