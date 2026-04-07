@@ -1,163 +1,341 @@
-#  Reality SNI Hunter
+# Reality SNI Hunter v5.3 (Clean Core)
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
-
-**Reality SNI Hunter** is a topology-aware scanner that helps locate Server Name Indication (SNI) domains suitable for use with V2Ray/Xray Reality. It focuses on finding domains served from IP ranges physically and numerically close to your VPS so that Reality handshake traffic blends with legitimate datacenter traffic.
-
-## Overview
-
-- **Topology-aware scanning:** Prioritizes nearby subnets to increase the chance that the SNI is served from the same rack/switch.
-- **Protocol checks:** Verifies HTTP/2 and TLS 1.3 support required by Reality.
-- **Filtering & heuristics:** Removes test/k8s/traefik hostnames, expands wildcards, and skips Cloudflare/CDN-proxied hosts.
-- **Exportable results:** Save findings as JSON or TXT for later use.
-
-## Features
-
-- Neighbor scanning (adjacent subnets)
-- Distance scoring (latency + numerical distance)
-- ASN highlighting (same Autonomous System)
-- H2 and TLS 1.3 verification
-- Smart domain filtering and wildcard expansion
-- GUI with dark theme, sortable columns, export options
-
-## Why Neighbor SNI Matters?
-
-- Topology: When an SNI is in the same /24 subnet and shares the same ASN, traffic to your VPS and to the donor site traverses the same backbone links. A censor sees traffic heading to an Amazon/DigitalOcean cluster and the packets go where packets for that SNI should go.
-
-- Jitter & Latency: If you pick an SNI with 200 ms ping while your VPS responds in 30 ms, deep inspection systems will spot the anomaly (fake handshake timing). This scanner looks for IPs with minimal ping difference (Score).
-
-- H2 Support: Reality mimics modern browsers which use HTTP/2. Using a site without H2 (only HTTP/1.1) is an immediate flag for blocking.
-
-## Requirements
-
-- Python 3.10 or newer
-- See `requirements.txt` for Python dependencies
-
-## Installation
-
-1. Clone or download this repository.
-2. (Recommended) Create and activate a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/Scripts/activate  # Windows (PowerShell)
-source .venv/bin/activate      # Linux / macOS
-```
-
-3. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-### macOS Specific
-
-If Python is built without Tkinter support, install it via Homebrew:
-
-```bash
-brew install python-tk@3.10
-```
-
-## Usage
-
-- Quick run (show help and options):
-
-```bash
-python main.py --help
-```
-
-- Typical workflow:
-    - Run `python main.py` (or the platform binary) on your VPS.
-    - Allow the scanner to probe nearby subnets and collect candidate hostnames.
-    - Review results in the GUI or exported JSON/TXT files.
-
-Notes:
-- Exact CLI flags and configuration options depend on `main.py`. Use `--help` to list available switches.
-- Running active network scans may be restricted by your provider—use responsibly and within terms of service.
-
-## Building an executable (optional)
-
-You can package the app with PyInstaller (example):
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile main.py
-```
-
-The compiled binary will be available in the `dist/` folder:
-- **Linux**: `dist/main` (ELF 64-bit executable)
-- **Windows**: `dist/main.exe` (build on Windows)
-- **macOS**: `dist/main` (build on macOS, requires `brew install python-tk@3.10` if Tkinter is missing)
-
-> **Note:** PyInstaller creates platform-specific binaries. To get `.exe` for Windows, run the build command on a Windows machine. For macOS binary, run on a Mac. The current `dist/main` is built for Linux x86_64.
-
-### macOS Specific
-
-If Python is built without Tkinter support, install it via Homebrew before building:
-
-```bash
-brew install python-tk@3.10
-```
-
-## Development
-
-- Code is placed in `main.py` (single-file entry). Add modules as needed for larger refactors.
-- Follow standard Python packaging and testing practices when contributing.
-
-## Contributing
-
-Contributions are welcome. Open an issue first to discuss larger changes. For small fixes, submit a PR with a clear description and tests where appropriate.
-
-## License
-
-This project is released under the MIT License. See LICENSE for details.
-
-## Acknowledgements
-
-Inspired by community tools for privacy-preserving tunneling and Reality protocol experimentation.
-
-## Contact
-
-If you have questions or need help, open an issue or contact the repository maintainer.
+[🇷🇺 Русский](#-русский) | [🇬🇧 English](#-english) | [🇨🇳 简体中文](#-简体中文)
 
 ---
 
 ## 🇷🇺 Русский
 
-**Reality SNI Hunter** — это сканер, ориентированный на топологию сети, который помогает находить SNI (Server Name Indication) домены, подходящие для использования с V2Ray/Xray Reality. Инструмент ищет домены в IP-диапазонах, физически и численно близких к вашему VPS, чтобы трафик выглядел естественным для дата-центра.
+### Описание
+Reality SNI Hunter — это инструмент для поиска подходящих SNI доменов для обхода блокировок Reality. Программа сканирует соседние IP-адреса или широкие диапазоны ASN, находя "чистые" домены, которые не фильтруются известными сервисами.
 
-- Топологически-осознанное сканирование ближайших подсетей.
-- Проверка поддержки HTTP/2 и TLS 1.3.
-- Фильтрация служебных/тестовых имён и исключение CDN/Cloudflare.
-- Экспорт результатов в JSON/TXT.
+### Особенности
+- ✅ **Расширенная фильтрация**: Исключает более 150 известных доменов (Google, Yandex, VK, Wikipedia, Netflix и др.)
+- ✅ **Два режима сканирования**: 
+  - Соседние подсети (±5 от IP VPS)
+  - Широкий поиск по ASN (/16 сеть)
+- ✅ **Фильтрация по стране**: Можно искать только домены из страны вашего VPS
+- ✅ **Рейтинг доменов**: Оценка качества найденных SNI
+- ✅ **Экспорт результатов**: JSON, TXT, копирование в буфер
+- ✅ **Сортировка**: По домену, IP, ASN, рейтингу
+- ✅ **Мультиязычность**: Русский, English, 简体中文
 
-### Почему соседний SNI важен?
+### Установка
 
-- Топология: Когда SNI находится в той же подсети (/24) и имеет тот же ASN, трафик до вашего VPS и до сайта-донора идет по одним и тем же магистральным кабелям. Цензор видит, что вы стучитесь в кластер серверов Amazon/DigitalOcean, и пакеты идут туда, куда и должны идти пакеты к этому SNI.
+#### Требования
+- Python 3.8–3.12
+- Библиотеки: `customtkinter`, `maxminddb`, `pyOpenSSL`, `cryptography`, `pyperclip`
 
-- Jitter и задержка: Если вы выберете SNI с пингом 200 мс, а ваш VPS отвечает за 30 мс, системы глубокого анализа (DPI) увидят аномалию (фейковое время рукопожатия). Этот сканер ищет IP с минимальной разницей в пинге (Score).
+#### Шаг 1: Установка зависимостей
+```bash
+pip install -r requirements.txt
+```
 
-- Поддержка H2: Reality имитирует современные браузеры, которые используют HTTP/2. Использование сайта без H2 (только HTTP/1.1) — мгновенный флаг для блокировки.
+#### Шаг 2: Базы данных GeoIP
+Скачайте базы данных MaxMind (бесплатно):
+- [Country.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
+- [ASN.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
 
-Установка и использование те же, что описаны выше — используйте `requirements.txt` и запускайте `python main.py` или собранный бинарник. Запуск сетевых сканирований может регулироваться провайдером.
+Поместите файлы в папку с программой.
+
+#### Для macOS (если Python без Tkinter)
+Если при запуске ошибка о отсутствии Tkinter:
+```bash
+brew install python-tk@3.10
+# или для вашей версии Python
+brew install python-tk@3.11
+brew install python-tk@3.12
+```
+
+### Запуск
+```bash
+python main.py
+```
+
+### Сборка исполняемых файлов
+
+#### Linux
+```bash
+pip install pyinstaller
+pyinstaller --onefile main.py
+# Бинарник: dist/main
+```
+
+#### Windows (.exe)
+Запустите на Windows:
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# Бинарник: dist/main.exe
+```
+
+#### macOS (.app / бинарник)
+Запустите на macOS:
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# Бинарник: dist/main
+```
+
+> ⚠️ **Важно**: PyInstaller создаёт бинарники только для текущей ОС. Для кросс-платформенной сборки используйте:
+> - **GitHub Actions** с матрицей ОС
+> - **Docker** для эмуляции других платформ
+> - **Виртуальные машины**
+
+### Альтернативные инструменты сборки
+
+| Инструмент | Платформы | Преимущества |
+|------------|-----------|--------------|
+| **PyInstaller** | Win/Mac/Linux | Самый популярный, простая настройка |
+| **cx_Freeze** | Win/Mac/Linux | Хорошая поддержка Mac |
+| **Nuitka** | Win/Mac/Linux | Компиляция в C++, выше производительность |
+| **py2exe** | Windows | Только Windows, лёгкий |
+| **py2app** | macOS | Только macOS, нативная интеграция |
+| **Briefcase** | Win/Mac/Linux | Часть BeeWare, создание полноценных приложений |
+
+#### Пример сборки через Nuitka:
+```bash
+pip install nuitka
+python -m nuitka --onefile --windows-disable-console main.py
+```
+
+### Использование
+1. Введите IP вашего VPS
+2. Выберите режим сканирования
+3. Установите лимит найденных доменов (или "Все")
+4. Нажмите "НАЧАТЬ ПОИСК"
+5. Результаты появятся в таблице
+6. Экспортируйте через кнопки JSON/TXT/Копировать
+
+### Фильтруемые домены (примеры)
+**Международные**: google.*, youtube.*, facebook.*, twitter.*, instagram.*, amazon.*, netflix.*, apple.*, microsoft.*, wikipedia.*, github.*, steam.*, discord.*
+
+**Российские**: yandex.*, ya.ru, mail.ru, vk.com, ok.ru, sberbank.*, tinkoff.*, wildberries.*, ozon.*, avito.*, lenta.*, ria.*, habr.*, kinopoisk.*, ivi.*, telegram.*, 2gis.*
+
+---
+
+## 🇬🇧 English
+
+### Description
+Reality SNI Hunter is a tool for finding suitable SNI domains to bypass Reality censorship. The program scans neighboring IP addresses or wide ASN ranges to find "clean" domains that are not filtered by known services.
+
+### Features
+- ✅ **Extended Filtering**: Excludes 150+ known domains (Google, Yandex, VK, Wikipedia, Netflix, etc.)
+- ✅ **Two Scan Modes**: 
+  - Neighbor Subnets (±5 from VPS IP)
+  - Wide ASN Scan (/16 network)
+- ✅ **Country Filter**: Search only for domains from your VPS country
+- ✅ **Domain Rating**: Quality scoring for found SNI
+- ✅ **Export Results**: JSON, TXT, copy to clipboard
+- ✅ **Sorting**: By domain, IP, ASN, score
+- ✅ **Multilingual**: Русский, English, 简体中文
+
+### Installation
+
+#### Requirements
+- Python 3.8–3.12
+- Libraries: `customtkinter`, `maxminddb`, `pyOpenSSL`, `cryptography`, `pyperclip`
+
+#### Step 1: Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+#### Step 2: GeoIP Databases
+Download MaxMind databases (free):
+- [Country.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
+- [ASN.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
+
+Place files in the program folder.
+
+#### For macOS (if Python without Tkinter)
+If you get a Tkinter error on startup:
+```bash
+brew install python-tk@3.10
+# or for your Python version
+brew install python-tk@3.11
+brew install python-tk@3.12
+```
+
+### Running
+```bash
+python main.py
+```
+
+### Building Executables
+
+#### Linux
+```bash
+pip install pyinstaller
+pyinstaller --onefile main.py
+# Binary: dist/main
+```
+
+#### Windows (.exe)
+Run on Windows:
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# Binary: dist/main.exe
+```
+
+#### macOS (.app / binary)
+Run on macOS:
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# Binary: dist/main
+```
+
+> ⚠️ **Important**: PyInstaller creates binaries only for the current OS. For cross-platform builds use:
+> - **GitHub Actions** with OS matrix
+> - **Docker** for platform emulation
+> - **Virtual Machines**
+
+### Alternative Build Tools
+
+| Tool | Platforms | Advantages |
+|------|-----------|------------|
+| **PyInstaller** | Win/Mac/Linux | Most popular, easy setup |
+| **cx_Freeze** | Win/Mac/Linux | Good Mac support |
+| **Nuitka** | Win/Mac/Linux | C++ compilation, higher performance |
+| **py2exe** | Windows | Windows only, lightweight |
+| **py2app** | macOS | macOS only, native integration |
+| **Briefcase** | Win/Mac/Linux | Part of BeeWare, creates full apps |
+
+#### Example build with Nuitka:
+```bash
+pip install nuitka
+python -m nuitka --onefile --windows-disable-console main.py
+```
+
+### Usage
+1. Enter your VPS IP
+2. Select scan mode
+3. Set limit for found domains (or "All")
+4. Click "START SCAN"
+5. Results appear in the table
+6. Export via JSON/TXT/Copy buttons
+
+### Filtered Domains (examples)
+**International**: google.*, youtube.*, facebook.*, twitter.*, instagram.*, amazon.*, netflix.*, apple.*, microsoft.*, wikipedia.*, github.*, steam.*, discord.*
+
+**Russian**: yandex.*, ya.ru, mail.ru, vk.com, ok.ru, sberbank.*, tinkoff.*, wildberries.*, ozon.*, avito.*, lenta.*, ria.*, habr.*, kinopoisk.*, ivi.*, telegram.*, 2gis.*
 
 ---
 
 ## 🇨🇳 简体中文
 
-**Reality SNI Hunter** 是一款面向拓扑的扫描工具，用于查找适合 V2Ray/Xray Reality 使用的 SNI（服务器名称指示）域名。该工具优先扫描与您的 VPS 在物理或数字上接近的 IP 段，使 Reality 握手流量更像是来自同一数据中心的合法流量。
+### 描述
+Reality SNI Hunter 是一个用于查找适合绕过 Reality 审查的 SNI 域名的工具。该程序扫描相邻 IP 地址或广泛的 ASN 范围，寻找不被已知服务过滤的"干净"域名。
 
-- 拓扑感知扫描：优先邻近子网。
-- 协议校验：验证 HTTP/2 与 TLS 1.3 支持。
-- 智能过滤：剔除测试/默认/容器化主机名，跳过 CDN/Cloudflare 代理的主机。
-- 支持导出为 JSON / TXT。
+### 功能特点
+- ✅ **扩展过滤**：排除 150+ 个已知域名（Google、Yandex、VK、Wikipedia、Netflix 等）
+- ✅ **两种扫描模式**：
+  - 邻近子网（VPS IP ±5）
+  - 广泛 ASN 扫描（/16 网络）
+- ✅ **国家过滤器**：仅搜索来自您 VPS 所在国家的域名
+- ✅ **域名评级**：对找到的 SNI 进行质量评分
+- ✅ **导出结果**：JSON、TXT、复制到剪贴板
+- ✅ **排序**：按域名、IP、ASN、评分排序
+- ✅ **多语言支持**：Русский、English、简体中文
 
-### 为什么邻近 SNI 很重要？
+### 安装
 
-- 拓扑：当 SNI 位于相同的 /24 子网并且属于相同的 ASN 时，指向您 VPS 与指向目标站点的流量会走相同的骨干链路。审查方会看到流量指向像 Amazon/DigitalOcean 这样的服务器集群，数据包会按该 SNI 应去的路径传输。
+#### 系统要求
+- Python 3.8–3.12
+- 库：`customtkinter`、`maxminddb`、`pyOpenSSL`、`cryptography`、`pyperclip`
 
-- 抖动与延迟：如果您选择的 SNI 延迟为 200 ms，而您的 VPS 延迟为 30 ms，深度检测系统（DPI）会发现异常（伪造的握手时序）。该扫描器寻找延迟差异最小的 IP（Score）。
+#### 步骤 1：安装依赖
+```bash
+pip install -r requirements.txt
+```
 
-- H2 支持：Reality 模拟使用 HTTP/2 的现代浏览器。使用仅支持 HTTP/1.1 的站点会成为被封锁的明显标志。
+#### 步骤 2：GeoIP 数据库
+下载 MaxMind 数据库（免费）：
+- [Country.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
+- [ASN.mmdb](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
 
-安装与使用请参照上文说明：使用 `requirements.txt` 安装依赖，并通过 `python main.py` 或打包后的可执行文件运行。进行网络扫描时请遵守服务提供商的使用条款。
+将文件放在程序文件夹中。
+
+#### macOS 用户（如果 Python 没有 Tkinter）
+如果启动时出现 Tkinter 错误：
+```bash
+brew install python-tk@3.10
+# 或者根据您的 Python 版本
+brew install python-tk@3.11
+brew install python-tk@3.12
+```
+
+### 运行
+```bash
+python main.py
+```
+
+### 构建可执行文件
+
+#### Linux
+```bash
+pip install pyinstaller
+pyinstaller --onefile main.py
+# 二进制文件：dist/main
+```
+
+#### Windows (.exe)
+在 Windows 上运行：
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# 二进制文件：dist/main.exe
+```
+
+#### macOS (.app / 二进制文件)
+在 macOS 上运行：
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed main.py
+# 二进制文件：dist/main
+```
+
+> ⚠️ **重要提示**：PyInstaller 仅为当前操作系统创建二进制文件。要跨平台构建，请使用：
+> - **GitHub Actions** 与操作系统矩阵
+> - **Docker** 用于平台模拟
+> - **虚拟机**
+
+### 替代构建工具
+
+| 工具 | 平台 | 优势 |
+|------|------|------|
+| **PyInstaller** | Win/Mac/Linux | 最流行，设置简单 |
+| **cx_Freeze** | Win/Mac/Linux | 良好的 Mac 支持 |
+| **Nuitka** | Win/Mac/Linux | C++ 编译，性能更高 |
+| **py2exe** | Windows | 仅限 Windows，轻量级 |
+| **py2app** | macOS | 仅限 macOS，原生集成 |
+| **Briefcase** | Win/Mac/Linux | BeeWare 的一部分，创建完整应用 |
+
+#### 使用 Nuitka 构建示例：
+```bash
+pip install nuitka
+python -m nuitka --onefile --windows-disable-console main.py
+```
+
+### 使用方法
+1. 输入您的 VPS IP 地址
+2. 选择扫描模式
+3. 设置找到域名的限制（或"全部"）
+4. 点击"开始扫描"
+5. 结果将显示在表格中
+6. 通过 JSON/TXT/复制按钮导出
+
+### 被过滤的域名（示例）
+**国际**：google.*、youtube.*、facebook.*、twitter.*、instagram.*、amazon.*、netflix.*、apple.*、microsoft.*、wikipedia.*、github.*、steam.*、discord.*
+
+**俄罗斯**：yandex.*、ya.ru、mail.ru、vk.com、ok.ru、sberbank.*、tinkoff.*、wildberries.*、ozon.*、avito.*、lenta.*、ria.*、habr.*、kinopoisk.*、ivi.*、telegram.*、2gis.*
+
+---
+
+## Лицензия / License / 许可证
+MIT License
+
+## Контакты / Contacts / 联系方式
+GitHub Issues
